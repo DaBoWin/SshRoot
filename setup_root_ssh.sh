@@ -135,11 +135,36 @@ set_ssh_port() {
         fi
         
         if [[ "$NEW_PORT" =~ ^[0-9]+$ ]] && [[ $NEW_PORT -ge 1024 ]] && [[ $NEW_PORT -le 65535 ]]; then
-            # 检查端口是否被占用
-            if netstat -tuln | grep -q ":$NEW_PORT "; then
+            # 检查端口是否被占用 - 使用多种方法检测
+            PORT_IN_USE=false
+            
+            # 方法1: 使用ss命令（推荐）
+            if command -v ss >/dev/null 2>&1; then
+                if ss -tuln | grep -q ":$NEW_PORT "; then
+                    PORT_IN_USE=true
+                fi
+            # 方法2: 使用netstat命令
+            elif command -v netstat >/dev/null 2>&1; then
+                if netstat -tuln | grep -q ":$NEW_PORT "; then
+                    PORT_IN_USE=true
+                fi
+            # 方法3: 使用lsof命令
+            elif command -v lsof >/dev/null 2>&1; then
+                if lsof -i :$NEW_PORT >/dev/null 2>&1; then
+                    PORT_IN_USE=true
+                fi
+            # 方法4: 尝试绑定端口测试
+            else
+                if timeout 1 bash -c "</dev/tcp/localhost/$NEW_PORT" 2>/dev/null; then
+                    PORT_IN_USE=true
+                fi
+            fi
+            
+            if [[ "$PORT_IN_USE" == "true" ]]; then
                 log_warn "端口 $NEW_PORT 已被占用，请选择其他端口"
                 continue
             fi
+            
             log_info "将使用端口: $NEW_PORT"
             break
         else
