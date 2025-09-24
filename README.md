@@ -17,22 +17,27 @@
 
 **方式1: 使用wget（推荐）**
 ```bash
-wget -O setup_root_ssh.sh https://raw.githubusercontent.com/your-repo/setup_root_ssh.sh && chmod +x setup_root_ssh.sh && ./setup_root_ssh.sh
+wget -O setup_root_ssh.sh https://raw.githubusercontent.com/DaBoWin/SshRoot/main/setup_root_ssh.sh && chmod +x setup_root_ssh.sh && ./setup_root_ssh.sh
 ```
 
 **方式2: 使用curl**
 ```bash
-curl -o setup_root_ssh.sh https://raw.githubusercontent.com/your-repo/setup_root_ssh.sh && chmod +x setup_root_ssh.sh && ./setup_root_ssh.sh
+curl -o setup_root_ssh.sh https://raw.githubusercontent.com/DaBoWin/SshRoot/main/setup_root_ssh.sh && chmod +x setup_root_ssh.sh && ./setup_root_ssh.sh
 ```
 
-### 下载并运行
+**方式3: 使用安装脚本**
+```bash
+curl -s https://raw.githubusercontent.com/DaBoWin/SshRoot/main/install.sh | bash
+```
+
+### 分步执行（可选）
 
 ```bash
 # 下载脚本
-wget https://raw.githubusercontent.com/your-repo/setup_root_ssh.sh
+wget https://raw.githubusercontent.com/DaBoWin/SshRoot/main/setup_root_ssh.sh
 
 # 或者使用curl
-curl -O https://raw.githubusercontent.com/your-repo/setup_root_ssh.sh
+curl -O https://raw.githubusercontent.com/DaBoWin/SshRoot/main/setup_root_ssh.sh
 
 # 给予执行权限
 chmod +x setup_root_ssh.sh
