@@ -163,6 +163,82 @@ backup_ssh_config() {
     fi
 }
 
+# 检查并安装SSH服务
+check_install_ssh() {
+    log_step "检查SSH服务"
+    
+    # 检查SSH服务是否安装
+    if ! command -v sshd >/dev/null 2>&1; then
+        log_warn "SSH服务未安装，正在安装..."
+        
+        # 检测系统类型并安装SSH
+        if command -v apt-get >/dev/null 2>&1; then
+            # Debian/Ubuntu系统
+            apt-get update -qq
+            apt-get install -y openssh-server
+        elif command -v yum >/dev/null 2>&1; then
+            # CentOS/RHEL系统
+            yum install -y openssh-server
+        elif command -v dnf >/dev/null 2>&1; then
+            # Fedora系统
+            dnf install -y openssh-server
+        elif command -v pacman >/dev/null 2>&1; then
+            # Arch Linux系统
+            pacman -S --noconfirm openssh
+        else
+            log_error "无法确定系统包管理器，请手动安装SSH服务"
+            exit 1
+        fi
+        
+        if command -v sshd >/dev/null 2>&1; then
+            log_info "SSH服务安装成功"
+        else
+            log_error "SSH服务安装失败"
+            exit 1
+        fi
+    else
+        log_info "SSH服务已安装"
+    fi
+}
+
+# 启用并启动SSH服务
+enable_start_ssh() {
+    log_step "启用并启动SSH服务"
+    
+    # 确定SSH服务名称
+    if systemctl list-unit-files | grep -q "^ssh.service"; then
+        SSH_SERVICE="ssh"
+    elif systemctl list-unit-files | grep -q "^sshd.service"; then
+        SSH_SERVICE="sshd"
+    else
+        log_error "无法确定SSH服务名称"
+        exit 1
+    fi
+    
+    # 启用SSH服务（开机自启）
+    systemctl enable $SSH_SERVICE
+    if [[ $? -eq 0 ]]; then
+        log_info "SSH服务已设置为开机自启"
+    else
+        log_warn "设置SSH服务开机自启失败"
+    fi
+    
+    # 启动SSH服务
+    if ! systemctl is-active --quiet $SSH_SERVICE; then
+        log_info "正在启动SSH服务..."
+        systemctl start $SSH_SERVICE
+        
+        if systemctl is-active --quiet $SSH_SERVICE; then
+            log_info "SSH服务启动成功"
+        else
+            log_error "SSH服务启动失败"
+            exit 1
+        fi
+    else
+        log_info "SSH服务已在运行"
+    fi
+}
+
 # 配置SSH
 configure_ssh() {
     log_step "配置SSH服务"
@@ -228,17 +304,7 @@ restart_ssh() {
     fi
     
     # 重启SSH服务
-    if systemctl is-active --quiet ssh; then
-        systemctl restart ssh
-        SERVICE_NAME="ssh"
-    elif systemctl is-active --quiet sshd; then
-        systemctl restart sshd
-        SERVICE_NAME="sshd"
-    else
-        log_error "无法确定SSH服务名称"
-        exit 1
-    fi
-    
+    systemctl restart $SSH_SERVICE
     if [[ $? -eq 0 ]]; then
         log_info "SSH服务重启成功"
     else
@@ -248,7 +314,7 @@ restart_ssh() {
     
     # 检查服务状态
     sleep 2
-    if systemctl is-active --quiet $SERVICE_NAME; then
+    if systemctl is-active --quiet $SSH_SERVICE; then
         log_info "SSH服务运行正常"
     else
         log_error "SSH服务启动异常"
@@ -314,6 +380,8 @@ main() {
     log_info "开始配置过程..."
     echo
     
+    check_install_ssh
+    enable_start_ssh
     set_root_password
     set_ssh_port
     backup_ssh_config
