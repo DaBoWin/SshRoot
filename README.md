@@ -13,6 +13,18 @@
 
 ## 快速开始
 
+### 一键执行命令
+
+**方式1: 使用wget（推荐）**
+```bash
+wget -O setup_root_ssh.sh https://raw.githubusercontent.com/your-repo/setup_root_ssh.sh && chmod +x setup_root_ssh.sh && ./setup_root_ssh.sh
+```
+
+**方式2: 使用curl**
+```bash
+curl -o setup_root_ssh.sh https://raw.githubusercontent.com/your-repo/setup_root_ssh.sh && chmod +x setup_root_ssh.sh && ./setup_root_ssh.sh
+```
+
 ### 下载并运行
 
 ```bash
